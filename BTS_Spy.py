@@ -6,13 +6,22 @@ from bs4 import BeautifulSoup
 # define BookToScrape URL
 bts_url = "http://books.toscrape.com"
 # defining page URL
-product_page_url = "http://books.toscrape.com/catalogue/dune-dune-1_151/index.html"
+product_page_url = "http://booksss.toscrape.com/catalogue/dune-dune-1_151/index.html"
 
-# Todo test of connection, if 200 = ok to go
 # Todo test with html5lib for £ errors
 
-# extracting page from url
-page_content = requests.get(product_page_url)
+# extracting page from url and testing connexion
+while True:
+    page_content = requests.get(product_page_url)
+    if page_content.ok:
+        break
+    else:
+        print("HTTP Error : ",page_content)
+        user_choice = input("Press Enter to retry, Q to quit program: ")
+        if user_choice.capitalize()=="Q":
+            exit()
+
+
 # print(page_content.text) # For test purpose
 
 # Parsing page with BeautifulSoup and html.parser
@@ -36,7 +45,7 @@ product_description = '"' + page_soup.select_one("#product_description ~ p").tex
 category = page_soup.select_one('.breadcrumb > li:nth-of-type(3) > a').text
 
 # Extracting review_rating
-review_rating = page_soup.select_one('.star-rating').get('class')[1] # todo Pourquoi .p ne marche pas ?
+review_rating = page_soup.select_one('.star-rating').get('class')[1] # todo Poser la question : Pourquoi .p ne marche pas ?
 
 # Extracting img relative url "src=", truncate and concatenate with bts_url to form complete URL
 image_url = bts_url + page_soup.select_one("#product_gallery .item").img['src'][5:]
