@@ -56,7 +56,7 @@ print("review_rating : ", review_rating)
 print("image_url : ", image_url)
 # end of test print
 
-# CSV Generation
+# CSV Generation todo save in a folder
 with open('dune.csv', 'w') as dunecsv:
     print("product_page_url,universal_product_code,title,price_including_tax,price_excluding_tax,number_available,product_description,category,review_rating,image_url", file=dunecsv)
     print(product_page_url + "," + universal_product_code + "," + title + "," + price_including_tax + "," + price_excluding_tax + "," + number_available + "," + product_description + "," + category + "," + review_rating + "," + image_url, file=dunecsv)
