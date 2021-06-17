@@ -7,10 +7,13 @@ from bs4 import BeautifulSoup
 bts_url = "http://books.toscrape.com"
 bts_url_catalogue = bts_url + "/catalogue"
 # defining page URL
-cat_url = "http://books.toscrape.com/catalogue/category/books/travel_2/index.html"
-cat_name = "Travel"
+cat_name = "science-fiction_16"
+cat_url = "http://books.toscrape.com/catalogue/category/books/" + cat_name + "/index.html"
+# Todo test with html5lib for £ errors, résoudre eventuellement toutes les erreurs d'encodage ?
+# Todo mise en page selon la norme PEP8
+# Todo change reviews in numbers
+# Todo download images
 
-# Todo test with html5lib for £ errors
 
 # extracting page from url, testing connexion and make soup
 def extract_soup(url):
@@ -19,27 +22,51 @@ def extract_soup(url):
         if page_content.ok:
             break
         else:
-            print("HTTP Error : ",page_content)
+            print("HTTP Error : ", page_content)
             user_choice = input("Press Enter to retry, Q to quit program: ")
-            if user_choice.capitalize()=="Q":
+            if user_choice.capitalize() == "Q":
                 exit()
     page_soup = BeautifulSoup(page_content.text, "html.parser")
     return page_soup
 
-# find all book links in a category page # todo page count and explore
-def book_links(page_soup):
-    links = page_soup.select('h3 > a')
-    i = 0
-    for link in links: # todo demander si pas plus simple que i
-        links[i] = bts_url_catalogue + link.attrs['href'][8:]
-        i+=1
+
+# Calculates a superior round
+def ceil(number):
+    if number % 1 == 0 :
+        number=int(number)
+    else:
+        number = int(number) + 1
+    return number
+
+
+# Calculates the number of pages in a category
+# and generates a list of pages
+def list_of_pages_in_category(cat_url, cat_name):
+    book_number = extract_soup(cat_url).select_one('.form-horizontal > strong').text
+    nb_pages = ceil(int(book_number) / 20)
+    cat_urls_list = [cat_url]
+    for nb_page in range(2, nb_pages+1):
+        cat_urls_list.append(bts_url_catalogue + "/category/books/" + cat_name + "/page-" + str(nb_page) + ".html"  )
+    return cat_urls_list
+
+
+# find all book links in a category
+def book_links(cat_urls_list):
+    raw_links = []
+    for page in range(0, len(cat_urls_list)):
+        page_soup = extract_soup(cat_urls_list[page])
+        raw_links = raw_links + page_soup.select('h3 > a')
+    links = []
+    for raw_link in raw_links:
+        links.append(bts_url_catalogue + raw_link['href'][8:])
     return links
+
 
 # Extracting info in book page
 def extract_info(product_page_url, bts_url):
     page_soup = extract_soup(product_page_url)
-    # Selecting Title, extract from list and isolate text
-    title = page_soup.select_one('h1').text
+    # Selecting Title, extract from list and isolate text and format with quotes
+    title = '"' + page_soup.select_one('h1').text.replace('"', '') + '"'
     # Selecting "Product Information" Table td content and store it in a list
     table = page_soup.select('table.table-striped tr td')
     # Extracting wanted informations from table list
@@ -50,8 +77,13 @@ def extract_info(product_page_url, bts_url):
 
     # Selecting product_description
     # selects the next sibling after the div with id=product-description
-    product_description = '"' + page_soup.select_one("#product_description ~ p").text + '"'  # todo demander pour les pb de guillemets
-    print(product_description) # todo remove after solving encode problem
+    product_description = page_soup.select_one("#product_description ~ p")
+    # Checks if product description exists ; if no, replace with something, if yes format for CSV
+    if product_description is None:
+        product_description ='"Non renseigné"'
+    else:
+        product_description = '"' + product_description.text.replace('"', '').replace(' ...more', '') + '"'  # todo demander pour les pb de guillemets (dans travel mais pas default?)
+    # print(product_description) # todo remove after solving encode problem
     # Selecting category
     category = page_soup.select_one('.breadcrumb > li:nth-of-type(3) > a').text
 
@@ -72,27 +104,11 @@ def append_csv(cat_name, list_info):
     with open(cat_name + '.csv', 'a') as cat_name:
         print(list_info[0] + "," + list_info[1] + "," + list_info[2] + "," + list_info[3] + "," + list_info[4] + "," + list_info[5] + "," + list_info[6] + "," + list_info[7] + "," + list_info[8] + "," + list_info[9], file=cat_name)
 
-links = book_links(extract_soup(cat_url))
+
+links = book_links(list_of_pages_in_category(cat_url, cat_name))
 init_csv(cat_name)
 for link in links:
-    append_csv(cat_name, extract_info(link,bts_url))
-
-exit()
-
-
-# test print
-# todo remove test print section
-# print("product_page_url : ", product_page_url)
-# print("Universal_product_code : ", universal_product_code)
-# print("title : ", title)
-# print("price_including_tax : ", price_including_tax)
-# print("price_excluding_tax : ", price_excluding_tax)
-# print("number_available : ", number_available)
-# print("product_description : ", product_description)
-# print("category : ", category)
-# print("review_rating : ", review_rating)
-# print("image_url : ", image_url)
-# end of test print
+    append_csv(cat_name, extract_info(link, bts_url))
 
 # CSV Generation todo save in a folder
 
