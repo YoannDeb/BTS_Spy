@@ -43,6 +43,7 @@ image_url = bts_url + page_soup.select_one("#product_gallery .item").img['src'][
 
 
 # test print
+# todo remove test print section
 print("product_page_url : ", product_page_url)
 print("Universal_product_code : ", universal_product_code)
 print("title : ", title)
