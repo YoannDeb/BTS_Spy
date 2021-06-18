@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 bts_url = "http://books.toscrape.com"
 bts_url_catalogue = bts_url + "/catalogue"
 # defining page URL
-cat_name = "travel_2"
+cat_name = "science-fiction_16"
 cat_url = "http://books.toscrape.com/catalogue/category/books/" + cat_name + "/index.html"
 # Todo mise en page selon la norme PEP8
 # Todo change reviews in numbers
@@ -84,6 +84,8 @@ def extract_info(product_page_url, bts_url):
         product_description ='"Non renseigné"'
     else:
         product_description = '"' + product_description.text.replace('"', '').replace(' ...more', '') + '"'
+
+        
     # Selecting category
     category = page_soup.select_one('.breadcrumb > li:nth-of-type(3) > a').text
 
@@ -102,17 +104,17 @@ def init_csv(cat_name):
 
 def append_csv(cat_name, list_info):
     with open(cat_name + '.csv', 'a') as cat_name:
+
         print(list_info[0] + "," + list_info[1] + "," + list_info[2]
               + "," + list_info[3] + "," + list_info[4] + ","
               + list_info[5] + "," + list_info[6]
               + "," + list_info[7] + "," + list_info[8] + ","
               + list_info[9], file=cat_name)
 
-
+# Extracting list of book links 
 links = book_links(list_of_pages_in_category(cat_url, cat_name))
+# Extracting info and Exporting into csv TODO save in a folder
 init_csv(cat_name)
 for link in links:
     append_csv(cat_name, extract_info(link, bts_url))
-
-# CSV Generation todo save in a folder
 
