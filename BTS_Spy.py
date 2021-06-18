@@ -1,5 +1,7 @@
 # Better to have Python > 3.2.2 for decent html.parser (if using html.parser)
 
+import pathlib
+import os
 import requests
 from bs4 import BeautifulSoup
 
@@ -7,6 +9,7 @@ from bs4 import BeautifulSoup
 bts_url = "http://books.toscrape.com"
 # Todo mise en page selon la norme PEP8
 # Todo download images
+# Todo improve url genrating with urllib
 
 
 # extracting page from url, testing connexion and make soup
@@ -81,7 +84,7 @@ def extract_info(product_page_url):
     price_including_tax = table[3].text
     price_excluding_tax = table[2].text
     number_available = table[5].text.replace("In stock (", "").replace(" available)", "")
-    # Selecting product_description
+    # Extracting description
     # selects the next sibling after the div with id=product-description
     product_description = page_soup.select_one("#product_description ~ p")
     # Checks if product description exists ; if no, replace with something, if yes format for CSV
@@ -89,48 +92,60 @@ def extract_info(product_page_url):
         product_description ='"Non renseigné"'
     else:
         product_description = '"' + product_description.text.replace('"', '').replace(' ...more', '') + '"'
-
-        
     # Extracting category
     category = '"' + page_soup.select_one('.breadcrumb > li:nth-of-type(3) > a').text + '"'
-
     # Extracting review_rating
     review_rating = page_soup.select_one('.star-rating').get('class')[1].replace("One", "1").replace("Two", "2").replace("Three", "3").replace("Four", "4").replace("Five", "5")
-
     # Extracting img relative url "src=", truncate and concatenate with bts_url to form complete URL
     image_url = bts_url + page_soup.select_one("#product_gallery .item").img['src'][5:]
     # Making list for one book
     list_info = (product_page_url, universal_product_code, title, price_including_tax, price_excluding_tax, number_available, product_description, category, review_rating, image_url)
     return list_info
 
-def init_csv(cat_name):
-    with open(cat_name + '.csv', 'w', encoding='utf-8-sig') as f:
+
+def init_csv():
+    with open(pathlib.Path.cwd() / 'data' / csv_name, 'w', encoding='utf-8-sig') as f:
         print("product_page_url,universal_product_code,title,price_including_tax,price_excluding_tax,number_available,product_description,category,review_rating,image_url", file=f)
 
-def append_csv(cat_name, list_info):
-    with open(cat_name + '.csv', 'a') as f:
 
+def append_csv(list_info):
+    with open(pathlib.Path.cwd() / 'data' / csv_name, 'a') as f:
         print(list_info[0] + "," + list_info[1] + "," + list_info[2]
               + "," + list_info[3] + "," + list_info[4] + ","
               + list_info[5] + "," + list_info[6]
               + "," + list_info[7] + "," + list_info[8] + ","
               + list_info[9], file=f)
 
-csv_number = 0
+def download_picture(list_info):
+    req = requests.get(list_info[-1])
+    book_name = list_info[1]
+    with open(pathlib.Path.cwd() / 'data' / book_name, "wb") as p:
+        for part in req.iter_content:
+            p.write(part)
+
+
+
+# Extracting category url list
 cat_urls = extract_cat_urls(bts_url)
 
+# create data directory if it doesn't exist
+os.makedirs(pathlib.Path.cwd() / 'data', exist_ok=True)
 
+csv_number = 0
 for cat_url in cat_urls:
     # Defining clean category name
-    neat_cat_name = cat_url.replace(bts_url + "/catalogue/category/books/", "").replace("/index.html", "")
-    print("Processing with " + neat_cat_name + " category. Please wait...")
+    link_cat_name = cat_url.replace(bts_url + "/catalogue/category/books/", "").replace("/index.html", "")
+    print("Processing with " + link_cat_name + " category. Please wait...")
     # Extracting list of book links
     links = book_links(list_of_pages_in_category(cat_url))
     # Extracting info and Exporting into csv TODO save in a folder
-    init_csv(neat_cat_name)
+    csv_name = link_cat_name + '.csv'
+    init_csv()
     for link in links:
-        append_csv(neat_cat_name, extract_info(link))
+        book_info = extract_info(link)
+        append_csv(book_info)
+        download_picture(book_info)
     csv_number += 1
-    print(neat_cat_name + ".csv successfully generated")
+    print(link_cat_name + ".csv successfully generated")
 
 print("Operation complete, " + str(csv_number) + " file(s) generated. Goodbye !")
