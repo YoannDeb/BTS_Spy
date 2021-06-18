@@ -9,7 +9,6 @@ bts_url_catalogue = bts_url + "/catalogue"
 # defining page URL
 cat_name = "science-fiction_16"
 cat_url = "http://books.toscrape.com/catalogue/category/books/" + cat_name + "/index.html"
-# Todo test with html5lib for £ errors, résoudre eventuellement toutes les erreurs d'encodage ?
 # Todo mise en page selon la norme PEP8
 # Todo change reviews in numbers
 # Todo download images
@@ -26,7 +25,7 @@ def extract_soup(url):
             user_choice = input("Press Enter to retry, Q to quit program: ")
             if user_choice.capitalize() == "Q":
                 exit()
-    page_soup = BeautifulSoup(page_content.text, "html.parser")
+    page_soup = BeautifulSoup(page_content.content, "html.parser")
     return page_soup
 
 
@@ -56,10 +55,10 @@ def book_links(cat_urls_list):
     for page in range(0, len(cat_urls_list)):
         page_soup = extract_soup(cat_urls_list[page])
         raw_links = raw_links + page_soup.select('h3 > a')
-    links = []
+    clean_links = []
     for raw_link in raw_links:
-        links.append(bts_url_catalogue + raw_link['href'][8:])
-    return links
+        clean_links.append(bts_url_catalogue + raw_link['href'][8:])
+    return clean_links
 
 
 # Extracting info in book page
@@ -71,19 +70,22 @@ def extract_info(product_page_url, bts_url):
     table = page_soup.select('table.table-striped tr td')
     # Extracting wanted informations from table list
     universal_product_code = table[0].text
-    price_including_tax = table[3].text[1:]  # Strangely the first character is a bug probably from some encoding mystery
-    price_excluding_tax = table[2].text[1:]
+    price_including_tax = table[3].text# Strangely the first character is a bug probably from some encoding mystery
+    price_excluding_tax = table[2].text
     number_available = table[5].text.replace("In stock (", "").replace(" available)", "")
-
+    print(price_including_tax)
+    print(price_excluding_tax)
     # Selecting product_description
     # selects the next sibling after the div with id=product-description
     product_description = page_soup.select_one("#product_description ~ p")
+    print(product_description)
     # Checks if product description exists ; if no, replace with something, if yes format for CSV
     if product_description is None:
         product_description ='"Non renseigné"'
     else:
-        product_description = '"' + product_description.text.replace('"', '').replace(' ...more', '') + '"'  # todo demander pour les pb de guillemets (dans travel mais pas default?)
-    # print(product_description) # todo remove after solving encode problem
+        product_description = '"' + product_description.text.replace('"', '').replace(' ...more', '') + '"'
+
+        
     # Selecting category
     category = page_soup.select_one('.breadcrumb > li:nth-of-type(3) > a').text
 
@@ -93,7 +95,7 @@ def extract_info(product_page_url, bts_url):
     # Extracting img relative url "src=", truncate and concatenate with bts_url to form complete URL
     image_url = bts_url + page_soup.select_one("#product_gallery .item").img['src'][5:]
     # Making list for one book
-    list_info = (product_page_url, universal_product_code, title, price_including_tax, price_excluding_tax, number_available,product_description, category, review_rating, image_url)
+    list_info = (product_page_url, universal_product_code, title, price_including_tax, price_excluding_tax, number_available, product_description, category, review_rating, image_url)
     return list_info
 
 def init_csv(cat_name):
@@ -102,13 +104,17 @@ def init_csv(cat_name):
 
 def append_csv(cat_name, list_info):
     with open(cat_name + '.csv', 'a') as cat_name:
-        print(list_info[0] + "," + list_info[1] + "," + list_info[2] + "," + list_info[3] + "," + list_info[4] + "," + list_info[5] + "," + list_info[6] + "," + list_info[7] + "," + list_info[8] + "," + list_info[9], file=cat_name)
 
+        print(list_info[0] + "," + list_info[1] + "," + list_info[2]
+              + "," + list_info[3] + "," + list_info[4] + ","
+              + list_info[5] + "," + list_info[6]
+              + "," + list_info[7] + "," + list_info[8] + ","
+              + list_info[9], file=cat_name)
 
+# Extracting list of book links 
 links = book_links(list_of_pages_in_category(cat_url, cat_name))
+# Extracting info and Exporting into csv TODO save in a folder
 init_csv(cat_name)
 for link in links:
     append_csv(cat_name, extract_info(link, bts_url))
-
-# CSV Generation todo save in a folder
 
