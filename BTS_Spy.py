@@ -1,12 +1,24 @@
 # Better to have Python > 3.2.2 for decent html.parser (if using html.parser)
 
+import pathlib
+import os
 import requests
 from bs4 import BeautifulSoup
 
 # define BookToScrape URL
-bts_url = "http://books.toscrape.com"
-# Todo mise en page selon la norme PEP8
-# Todo download images
+BTS_URL = "http://books.toscrape.com"
+# Todo mise en page selon la norme PEP8 et PEP20
+# Todo download images # Todo slugify title to use like an image name # Todo rajouter dans le csv le chemin et nom de l'image ?
+# Todo improve url and csv filenames with f" exemple f"{BTS_URL}/catalogue/{raw_link[‘href’][8:]}" + replace constant BTS_URL by the text in the document ?
+# Todo réduction et mise en page des commentaires (notamment juste après le def pour décrire un fonction) net suppression des commentaires en trop
+# Todo commit plus clairs et normalisés
+# Todo mettre __author__
+# Todo mettre fonction __main__ et fonction principale (entry_point() ou BTS_Spy_job())
+# todo mettre en forme readme.md avec mise en forme Markdown et deux fichier anglais et fr
+# todo .gitignore
+# todo import math et use ceil
+# todo librairie pour faire un csv à partir d'une liste ?
+# todo faire une presentation
 
 
 # extracting page from url, testing connexion and make soup
@@ -65,9 +77,8 @@ def book_links(cat_urls_list):
         raw_links = raw_links + page_soup.select('h3 > a')
     clean_links = []
     for raw_link in raw_links:
-        clean_links.append(bts_url + "/catalogue" + raw_link['href'][8:])
+        clean_links.append(BTS_URL + "/catalogue" + raw_link['href'][8:])
     return clean_links
-
 
 # Extracting info in one book page
 def extract_info(product_page_url):
@@ -81,56 +92,92 @@ def extract_info(product_page_url):
     price_including_tax = table[3].text
     price_excluding_tax = table[2].text
     number_available = table[5].text.replace("In stock (", "").replace(" available)", "")
-    # Selecting product_description
+    # Extracting description
     # selects the next sibling after the div with id=product-description
     product_description = page_soup.select_one("#product_description ~ p")
     # Checks if product description exists ; if no, replace with something, if yes format for CSV
     if product_description is None:
-        product_description ='"Non renseigné"'
+        product_description = '"Non renseigné"'
     else:
         product_description = '"' + product_description.text.replace('"', '').replace(' ...more', '') + '"'
-
-        
     # Extracting category
     category = '"' + page_soup.select_one('.breadcrumb > li:nth-of-type(3) > a').text + '"'
-
     # Extracting review_rating
     review_rating = page_soup.select_one('.star-rating').get('class')[1].replace("One", "1").replace("Two", "2").replace("Three", "3").replace("Four", "4").replace("Five", "5")
-
-    # Extracting img relative url "src=", truncate and concatenate with bts_url to form complete URL
-    image_url = bts_url + page_soup.select_one("#product_gallery .item").img['src'][5:]
+    # Extracting img relative url "src=", truncate and concatenate with BTS_URL to form complete URL
+    image_url = BTS_URL + page_soup.select_one("#product_gallery .item").img['src'][5:]
+    # getting image relative path
+#    get_image_path_from_url(product_page_irl)
+    img_name = product_page_url.replace("http://books.toscrape.com/catalogue/", "").replace("/index.html", "")
+    saved_image_path = f"data/{link_cat_name}_img/{img_name}.jpg"
     # Making list for one book
-    list_info = (product_page_url, universal_product_code, title, price_including_tax, price_excluding_tax, number_available, product_description, category, review_rating, image_url)
+    list_info = (product_page_url, universal_product_code, title, price_including_tax, price_excluding_tax, number_available, product_description, category, review_rating, image_url, saved_image_path)
     return list_info
 
-def init_csv(cat_name):
-    with open(cat_name + '.csv', 'w', encoding='utf-8-sig') as f:
-        print("product_page_url,universal_product_code,title,price_including_tax,price_excluding_tax,number_available,product_description,category,review_rating,image_url", file=f)
 
-def append_csv(cat_name, list_info):
-    with open(cat_name + '.csv', 'a') as f:
+def init_csv():
+    with open(pathlib.Path.cwd() / 'data' / csv_name, 'w', encoding='utf-8-sig') as f:
+        print("product_page_url,universal_product_code,title,price_including_tax,price_excluding_tax,number_available,product_description,category,review_rating,image_url,saved_image_path", file=f)
 
+
+def append_csv(list_info):
+    with open(pathlib.Path.cwd() / 'data' / csv_name, 'a') as f:
         print(list_info[0] + "," + list_info[1] + "," + list_info[2]
               + "," + list_info[3] + "," + list_info[4] + ","
               + list_info[5] + "," + list_info[6]
               + "," + list_info[7] + "," + list_info[8] + ","
-              + list_info[9], file=f)
-
-csv_number = 0
-cat_urls = extract_cat_urls(bts_url)
+              + list_info[9] + "," + list_info[10], file=f)
 
 
+# todo verbose version. better?
+""""
+def download_picture(list_info):
+    img = requests.get(list_info[-2])
+    url_title = list_info[0].replace("http://books.toscrape.com/catalogue/", "").replace("/index.html", "")
+    img_name = f"{url_title}.jpg"
+    with open(pathlib.Path.cwd() / 'data' / f'{link_cat_name}_img' / img_name, "wb") as i:
+        i.write(img.content)
+"""
+def download_picture(list_info):
+    img = requests.get(list_info[-2])
+    with open(pathlib.Path.cwd() / 'data' / f'{link_cat_name}_img' / f'{list_info[0].replace("http://books.toscrape.com/catalogue/", "").replace("/index.html", "")}.jpg',"wb") as i:
+        i.write(img.content)
+
+
+
+# Main Job
+# Extracting category url list
+cat_urls = extract_cat_urls(BTS_URL)
+print("BTS_Spy connected successfully !")
+print("The scrapping may take some time...")
+print("######################################")
+
+# create data directory if it doesn't exist
+os.makedirs(pathlib.Path.cwd() / 'data', exist_ok=True)
+
+csv_counter = 0
+book_counter = 0
 for cat_url in cat_urls:
     # Defining clean category name
-    neat_cat_name = cat_url.replace(bts_url + "/catalogue/category/books/", "").replace("/index.html", "")
-    print("Processing with " + neat_cat_name + " category. Please wait...")
+    link_cat_name = cat_url.replace(BTS_URL + "/catalogue/category/books/", "").replace("/index.html", "")
+
     # Extracting list of book links
     links = book_links(list_of_pages_in_category(cat_url))
-    # Extracting info and Exporting into csv TODO save in a folder
-    init_csv(neat_cat_name)
+    print(f"Processing with {extract_info(links[0])[7]} category")
+    print("_________________________________________")
+    csv_name = link_cat_name + '.csv'
+    os.makedirs(pathlib.Path.cwd() / 'data' / f'{link_cat_name}_img', exist_ok=True)
+    init_csv()
+    previous_book_counter = book_counter
     for link in links:
-        append_csv(neat_cat_name, extract_info(link))
-    csv_number += 1
-    print(neat_cat_name + ".csv successfully generated")
+        book_info = extract_info(link)
+        print(f"{book_counter} book(s) scraped | Processing with book : {book_info[2]}")
+        book_counter += 1
+        append_csv(book_info)
+        download_picture(book_info)
+    csv_counter += 1
+    print("______________________________________________________________________________________________________")
+    print(f"OK ! category n°{csv_counter} with {book_counter - previous_book_counter} book(s) inside completely scraped | {link_cat_name}.csv successfully generated")
+    print("______________________________________________________________________________________________________")
 
-print("Operation complete, " + str(csv_number) + " file(s) generated. Goodbye !")
+print(f"Operation complete, {csv_counter} csv file(s) generated and {book_counter} books scraped. Goodbye !")
