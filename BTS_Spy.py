@@ -1,4 +1,9 @@
-# Better to have Python > 3.2.2 for decent html.parser (if using html.parser)
+""" BTS_Spy
+
+Designed to scrape http://books.toscrape.com
+"""
+
+__author__ = "Yoann Deblois"
 
 import pathlib
 import os
@@ -7,10 +12,6 @@ import requests
 from bs4 import BeautifulSoup
 
 # Todo mise en page selon la norme PEP8 et PEP20
-# Todo download images # Todo slugify title to use like an image name # Todo rajouter dans le csv le chemin et nom de l'image ?
-# Todo improve url and csv filenames with f" exemple f"http://books.toscrape.com/catalogue/{raw_link[‘href’][8:]}"
-# Todo réduction et mise en page des commentaires (notamment juste après le def pour décrire un fonction) net suppression des commentaires en trop
-# Todo commit plus clairs et normalisés
 # Todo mettre __author__
 # Todo mettre fonction __main__ et fonction principale (entry_point() ou BTS_Spy_job())
 # todo mettre en forme readme.md avec mise en forme Markdown et deux fichier anglais et fr
