@@ -1,6 +1,11 @@
 """ BTS_Spy
 
-Designed to scrape http://books.toscrape.com
+Designed to scrape http://books.toscrape.com:
+- Create on csv file for each category
+- Each csv contains information on each book of the category
+- Download the picture of the book in a folder named after the category
+
+(It's better to run on Python > 3.2.2 for decent html.parser)
 """
 
 __author__ = "Yoann Deblois"
@@ -12,18 +17,22 @@ from math import ceil
 import requests
 from bs4 import BeautifulSoup
 
-# Todo mettre fonction __main__ et fonction principale (entry_point() ou BTS_Spy_job())
 # todo mettre en forme readme.md avec mise en forme Markdown et deux fichier anglais et fr
 # todo .gitignore
 # todo librairie pour faire un csv à partir d'une liste ?
 
 
 def extract_soup(url):
-    """ Extract page from url, test connexion and make soup
-    :param url: url of the page to parse
-    :return: page parsed
-    """
+    """ Parse a page, in other words make soup.
+    - Extract page from url
+    - Test connexion:
+        * if failed propose a retry,
+        * else make soup (parse page).
 
+    :param url: Url of the page to parse.
+
+    :return: Soup (page parsed).
+    """
     while True:
         page_content = requests.get(url)
         if page_content.ok:
@@ -60,7 +69,7 @@ def list_of_pages_in_category(cat_url_index):
 
     :param cat_url_index: The index page of the category.
 
-    :return: A list of all pages of the category
+    :return: A list of all pages of the category.
     """
     book_number = extract_soup(cat_url_index).select_one(
         '.form-horizontal > strong').text
@@ -75,11 +84,11 @@ def list_of_pages_in_category(cat_url_index):
 
 
 def book_links(cat_urls_list):
-    """ Find all book's links in one category
+    """ Find all book's links in one category.
 
-    :param cat_urls_list: list of all pages in one category
+    :param cat_urls_list: List of all pages in one category.
 
-    :return: a list of all book links in one category
+    :return: A list of all book links in one category.
     """
     raw_book_links = []
     for page in range(0, len(cat_urls_list)):
@@ -92,8 +101,8 @@ def book_links(cat_urls_list):
     return clean_book_links
 
 
-def extract_book_info(product_page_url):
-    """ This function extracts all wanted information in one book page
+def extract_book_info(product_page_url, link_cat_name):
+    """ This function extracts all wanted information in one book page.
 
     Those information are :
     - product_page_url
@@ -109,13 +118,13 @@ def extract_book_info(product_page_url):
     - saved_image_path (/data/category_folder_img whose name
     is created from the name of the category in the url)
 
-    Some variables are surrounded by quotes to comply with csv format
+    Some variables are surrounded by quotes to comply with csv format.
 
-    :param product_page_url: One book's url
+    :param product_page_url: One book's url.
+    :param link_cat_name: name of the category as it is in the url.
 
     :return: A list of all wanted information for this book
     """
-
     page_soup = extract_soup(product_page_url)
     title = '"' + page_soup.select_one('h1').text.replace('"', '') + '"'
 
@@ -161,13 +170,11 @@ def extract_book_info(product_page_url):
     return info_list
 
 
-def init_csv():
+def init_csv(csv_name):
     """ Create the csv file in /data folder.
 
-    The name is from an external variable "csv_name" composed
-    with the name of the book in the url.
+    :param csv_name: Composed with the name of the book in the url.
     """
-
     with open(
             pathlib.Path.cwd() / 'data' / csv_name, 'w', encoding='utf-8-sig'
             ) as f:
@@ -177,28 +184,29 @@ def init_csv():
               "saved_image_path", file=f)
 
 
-def append_csv(info_list):
-    """ Print the information in the csv file
+def append_csv(info_list, csv_name):
+    """ Print the information in the csv file.
 
-    :param info_list: The book information list
+    :param csv_name:  Composed with the name of the book in the url.
+    :param info_list: The book information list.
     """
-
     with open(pathlib.Path.cwd() / 'data' / csv_name, 'a') as f:
         print(f"{info_list[0]},{info_list[1]},{info_list[2]},{info_list[3]},"
               f"{info_list[4]},{info_list[5]},{info_list[6]},{info_list[7]},"
               f"{info_list[8]},{info_list[9]},{info_list[10]}", file=f)
 
 
-def download_picture(info_list):
+def download_picture(info_list, link_cat_name):
     """ Downloads the picture of one book from it's information list.
 
-    The name of the .jpeg file is created with the book name in the url
+    The name of the .jpeg file is created with the book name in the url.
 
-    Save it in a  (
-    :param info_list: The book information list
-    :return:
+    The file is saved in a folder in /data named after
+      the category's name in the url.
+
+    :param info_list: The book information list.
+    :param link_cat_name: Name of the category as it is in the url.
     """
-
     img = requests.get(info_list[-2])
     url_title = info_list[0].replace(
         "http://books.toscrape.com/catalogue/", "").replace(
@@ -210,9 +218,8 @@ def download_picture(info_list):
             ) as i:
         i.write(img.content)
 
-# todo "compact" version -> better?
 
-
+# todo: "Compact" version for function download_picture better?
 """
 def download_picture_bis(info_list):
     img = requests.get(info_list[-2])
@@ -226,62 +233,93 @@ def download_picture_bis(info_list):
 """
 
 
-# Main Job
-cat_urls = extract_cat_urls("http://books.toscrape.com")
+def entry_point():
+    """ This is the main job of BTS-Spy. Here is what it does:
 
-print("BTS_Spy connected successfully to http://books.toscrape.com !")
-print("The scrapping may take some time...")
-print("######################################")
+    - Extracts all categories url
+    - Prints a connexion confirmation and welcome message
+    - Creates a directory data if exists
+    - Initiate counters for the number of csv created (one per category)
+      and books scraped
+    - Main loop: For each category:
+        * Find all book links in a category
+        * Create a csv by the name of the category in the url
+          and add headers
+        * Show the category that is going to be scraped in console
+        * Launch the Child loop
+          * Child loop: For each book in the category:
+            ** Extract all information
+            ** Show progress in console
+            ** Increase the book counter by one
+            ** Append the csv file of the category
+            ** Download the picture
+        * Increase csv counter by one
+        * Show success message with the amount books scraped in category
+    - Show final success message with total amount of csv files
+      and books scraped
+    """
+    cat_urls = extract_cat_urls("http://books.toscrape.com")
 
-os.makedirs(pathlib.Path.cwd() / 'data', exist_ok=True)
+    print("BTS_Spy connected successfully to http://books.toscrape.com !")
+    print("The scrapping may take some time...")
+    print("######################################")
 
-csv_counter = 0
-book_counter = 0
+    os.makedirs(pathlib.Path.cwd() / 'data', exist_ok=True)
 
-for cat_url in cat_urls:
-    link_cat_name = cat_url.replace(
-        "http://books.toscrape.com/catalogue/category/books/", "").replace(
-        "/index.html", "")
+    csv_counter = 0
+    book_counter = 0
 
-    links = book_links(list_of_pages_in_category(cat_url))
+    for cat_url in cat_urls:
+        link_cat_name = cat_url.replace(
+            "http://books.toscrape.com/catalogue/category/books/", "").replace(
+            "/index.html", "")
 
-    print(f"Processing with {extract_book_info(links[0])[7]} category")
-    print("_________________________________________")
-
-    csv_name = f'{link_cat_name}.csv'
-    os.makedirs(
-        pathlib.Path.cwd() / 'data' / f'{link_cat_name}_img', exist_ok=True)
-    init_csv()
-
-    previous_book_counter = book_counter
-
-    for link in links:
-        book_info = extract_book_info(link)
+        links = book_links(list_of_pages_in_category(cat_url))
 
         print(
-            f"{book_counter} book(s) scraped | "
-            f"Processing with book : {book_info[2]}")
+            f"Processing with "
+            f"{extract_book_info(links[0], link_cat_name)[7]} category")
+        print("_________________________________________")
 
-        book_counter += 1
+        csv_name = f'{link_cat_name}.csv'
+        os.makedirs(
+            pathlib.Path.cwd(
+            ) / 'data' / f'{link_cat_name}_img', exist_ok=True)
+        init_csv(csv_name)
 
-        append_csv(book_info)
+        previous_book_counter = book_counter
 
-        download_picture(book_info)
+        for link in links:
+            book_info = extract_book_info(link, link_cat_name)
 
-    csv_counter += 1
+            print(
+                f"{book_counter} book(s) scraped | "
+                f"Processing with book : {book_info[2]}")
+
+            book_counter += 1
+
+            append_csv(book_info, csv_name)
+
+            download_picture(book_info, link_cat_name)
+
+        csv_counter += 1
+
+        print(
+            "___________________________________________________"
+            "___________________________________________________")
+        print(
+            f"OK ! category n°{csv_counter} "
+            f"with {book_counter - previous_book_counter} book(s) "
+            f"inside completely scraped | {link_cat_name}.csv "
+            f"successfully generated")
+        print(
+            "___________________________________________________"
+            "___________________________________________________")
 
     print(
-        "___________________________________________________"
-        "___________________________________________________")
-    print(
-        f"OK ! category n°{csv_counter} "
-        f"with {book_counter - previous_book_counter} book(s) "
-        f"inside completely scraped | {link_cat_name}.csv "
-        f"successfully generated")
-    print(
-        "___________________________________________________"
-        "___________________________________________________")
+        f"Operation complete, {csv_counter} csv file(s) generated"
+        f" and {book_counter} books scraped. Goodbye !")
 
-print(
-    f"Operation complete, {csv_counter} csv file(s) generated"
-    f" and {book_counter} books scraped. Goodbye !")
+
+if __name__ == '__main__':
+    entry_point()
