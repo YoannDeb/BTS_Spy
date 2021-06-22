@@ -186,7 +186,9 @@ def append_csv(info_list, csv_name):
     :param csv_name:  Composed with the name of the book in the url.
     :param info_list: The book information list.
     """
-    with open(pathlib.Path.cwd() / 'data' / csv_name, 'a') as f:
+    with open(
+            pathlib.Path.cwd() / 'data' / csv_name, 'a', encoding='utf-8'
+            ) as f:
         print(f"{info_list[0]},{info_list[1]},{info_list[2]},{info_list[3]},"
               f"{info_list[4]},{info_list[5]},{info_list[6]},{info_list[7]},"
               f"{info_list[8]},{info_list[9]},{info_list[10]}", file=f)
