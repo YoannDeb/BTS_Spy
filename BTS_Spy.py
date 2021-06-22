@@ -29,8 +29,10 @@ def extract_soup(url):
         if page_content.ok:
             break
         else:
-            print("HTTP Error: ", page_content, "trying to access: ", url)
-            user_choice = input("Press Enter to retry, Q to quit program: ")
+            print(
+                "HTTP Error: ", page_content, "trying to access: ", url)
+            user_choice = input(
+                "Press Enter to retry, Q to quit program: ")
             if user_choice.capitalize() == "Q":
                 exit()
     page_soup = BeautifulSoup(page_content.content, "html.parser")
@@ -60,13 +62,15 @@ def list_of_pages_in_category(cat_url_index):
 
     :return: A list of all pages of the category
     """
-    book_number = extract_soup(cat_url_index).select_one('.form-horizontal > strong').text
+    book_number = extract_soup(cat_url_index).select_one(
+        '.form-horizontal > strong').text
     nb_pages = ceil(int(book_number) / 20)
 
     all_url_of_one_category = [cat_url_index]
 
     for nb_page in range(2, nb_pages + 1):
-        all_url_of_one_category.append(cat_url_index.replace("index", f"page-{str(nb_page)}"))
+        all_url_of_one_category.append(cat_url_index.replace(
+            "index", f"page-{str(nb_page)}"))
     return all_url_of_one_category
 
 
@@ -83,7 +87,8 @@ def book_links(cat_urls_list):
         raw_book_links = raw_book_links + page_soup.select('h3 > a')
     clean_book_links = []
     for raw_book_link in raw_book_links:
-        clean_book_links.append(f"http://books.toscrape.com/catalogue{raw_book_link['href'][8:]}")
+        clean_book_links.append(
+            f"http://books.toscrape.com/catalogue{raw_book_link['href'][8:]}")
     return clean_book_links
 
 
@@ -123,22 +128,29 @@ def extract_book_info(product_page_url):
 
     price_excluding_tax = table[2].text
 
-    number_available = table[5].text.replace("In stock (", "").replace(" available)", "")
+    number_available = table[5].text.replace(
+        "In stock (", "").replace(" available)", "")
 
     product_description = page_soup.select_one("#product_description ~ p")
     if product_description is None:
         product_description = '"Non renseigné"'
     else:
-        product_description = '"' + product_description.text.replace('"', '').replace(' ...more', '') + '"'
+        product_description = '"' + product_description.text.replace(
+            '"', '').replace(' ...more', '') + '"'
 
-    category = '"' + page_soup.select_one('.breadcrumb > li:nth-of-type(3) > a').text + '"'
+    category = '"' + page_soup.select_one(
+        '.breadcrumb > li:nth-of-type(3) > a').text + '"'
 
-    review_rating = page_soup.select_one('.star-rating').get('class')[1].replace("One", "1")\
-        .replace("Two", "2").replace("Three", "3").replace("Four", "4").replace("Five", "5")
+    review_rating = page_soup.select_one(
+        '.star-rating').get('class')[1].replace(
+        "One", "1").replace("Two", "2").replace(
+        "Three", "3").replace("Four", "4").replace("Five", "5")
 
-    image_url = "http://books.toscrape.com" + page_soup.select_one("#product_gallery .item").img['src'][5:]
+    image_url = "http://books.toscrape.com" + page_soup.select_one(
+        "#product_gallery .item").img['src'][5:]
 
-    img_name = product_page_url.replace("http://books.toscrape.com/catalogue", "").replace("/index.html", "")
+    img_name = product_page_url.replace(
+        "http://books.toscrape.com/catalogue", "").replace("/index.html", "")
 
     saved_image_path = f"data/{link_cat_name}_img/{img_name}.jpg"
 
@@ -152,13 +164,17 @@ def extract_book_info(product_page_url):
 def init_csv():
     """ Create the csv file in /data folder.
 
-    The name is from an external variable "csv_name" composed with the name of the book in the url.
+    The name is from an external variable "csv_name" composed
+    with the name of the book in the url.
     """
 
-    with open(pathlib.Path.cwd() / 'data' / csv_name, 'w', encoding='utf-8-sig') as f:
-        print("product_page_url,universal_product_code,title,price_including_tax,"
-              "price_excluding_tax,number_available,product_description,"
-              "category,review_rating,image_url,saved_image_path", file=f)
+    with open(
+            pathlib.Path.cwd() / 'data' / csv_name, 'w', encoding='utf-8-sig'
+            ) as f:
+        print("product_page_url,universal_product_code,title,"
+              "price_including_tax,price_excluding_tax,number_available,"
+              "product_description,category,review_rating,image_url,"
+              "saved_image_path", file=f)
 
 
 def append_csv(info_list):
@@ -184,9 +200,14 @@ def download_picture(info_list):
     """
 
     img = requests.get(info_list[-2])
-    url_title = info_list[0].replace("http://books.toscrape.com/catalogue/", "").replace("/index.html", "")
+    url_title = info_list[0].replace(
+        "http://books.toscrape.com/catalogue/", "").replace(
+        "/index.html", "")
     img_name = f"{url_title}.jpg"
-    with open(pathlib.Path.cwd() / 'data' / f'{link_cat_name}_img' / img_name, "wb") as i:
+    with open(
+            pathlib.Path.cwd(
+            ) / 'data' / f'{link_cat_name}_img' / img_name, "wb"
+            ) as i:
         i.write(img.content)
 
 # todo "compact" version -> better?
@@ -195,16 +216,19 @@ def download_picture(info_list):
 """
 def download_picture_bis(info_list):
     img = requests.get(info_list[-2])
-    with open(pathlib.Path.cwd() / 'data' / f'{link_cat_name}_img' / f'{info_list[0]\
-                .replace("http://books.toscrape.com/catalogue/", "")\
-                .replace("/index.html", "")}.jpg', "wb") as i:
+    with open(
+            pathlib.Path.cwd(
+            ) / 'data' / f'{link_cat_name}_img' / f'{info_list[0].replace(
+            "http://books.toscrape.com/catalogue/", "").replace(
+            "/index.html", "")}.jpg', "wb"
+            ) as i:
         i.write(img.content)
 """
 
 
 # Main Job
-# Extracting category url list
 cat_urls = extract_cat_urls("http://books.toscrape.com")
+
 print("BTS_Spy connected successfully to http://books.toscrape.com !")
 print("The scrapping may take some time...")
 print("######################################")
@@ -213,33 +237,51 @@ os.makedirs(pathlib.Path.cwd() / 'data', exist_ok=True)
 
 csv_counter = 0
 book_counter = 0
-for cat_url in cat_urls:
-    # Defining clean category name
-    link_cat_name = cat_url.replace("http://books.toscrape.com/catalogue/category/books/",
-                                    "").replace("/index.html", "")
 
-    # Extracting list of book links
+for cat_url in cat_urls:
+    link_cat_name = cat_url.replace(
+        "http://books.toscrape.com/catalogue/category/books/", "").replace(
+        "/index.html", "")
+
     links = book_links(list_of_pages_in_category(cat_url))
+
     print(f"Processing with {extract_book_info(links[0])[7]} category")
     print("_________________________________________")
+
     csv_name = f'{link_cat_name}.csv'
-    os.makedirs(pathlib.Path.cwd() / 'data' / f'{link_cat_name}_img', exist_ok=True)
+    os.makedirs(
+        pathlib.Path.cwd() / 'data' / f'{link_cat_name}_img', exist_ok=True)
     init_csv()
+
     previous_book_counter = book_counter
+
     for link in links:
         book_info = extract_book_info(link)
-        print(f"{book_counter} book(s) scraped | Processing with book : {book_info[2]}")
-        book_counter += 1
-        append_csv(book_info)
-        download_picture(book_info)
-    csv_counter += 1
-    print("___________________________________________________"
-          "___________________________________________________")
-    print(
-        f"OK ! category n°{csv_counter} with {book_counter - previous_book_counter} book(s) "
-        f"inside completely scraped | {link_cat_name}.csv successfully generated")
-    print("___________________________________________________"
-          "___________________________________________________")
 
-print(f"Operation complete, {csv_counter} csv file(s) generated"
-      f" and {book_counter} books scraped. Goodbye !")
+        print(
+            f"{book_counter} book(s) scraped | "
+            f"Processing with book : {book_info[2]}")
+
+        book_counter += 1
+
+        append_csv(book_info)
+
+        download_picture(book_info)
+
+    csv_counter += 1
+
+    print(
+        "___________________________________________________"
+        "___________________________________________________")
+    print(
+        f"OK ! category n°{csv_counter} "
+        f"with {book_counter - previous_book_counter} book(s) "
+        f"inside completely scraped | {link_cat_name}.csv "
+        f"successfully generated")
+    print(
+        "___________________________________________________"
+        "___________________________________________________")
+
+print(
+    f"Operation complete, {csv_counter} csv file(s) generated"
+    f" and {book_counter} books scraped. Goodbye !")
