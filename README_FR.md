@@ -10,9 +10,10 @@ Il est préférable d'avoir une version Python > 3.2.2 pour avoir un module html
 
 Ouvrir un terminal, se placer dans le dossier voulu et lancer les commandes suivantes :
 ```
+git clone https://github.com/YoannDeb/BTS_Spy.git
+cd BTS_Spy
 Python -m venv env
 source env/bin/activate
-git clone https://github.com/YoannDeb/BTS_Spy.git
 pip install -r requirements.txt
 Python BTS_Spy.py
 ```
