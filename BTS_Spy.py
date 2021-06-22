@@ -17,10 +17,6 @@ from math import ceil
 import requests
 from bs4 import BeautifulSoup
 
-# todo mettre en forme readme.md avec mise en forme Markdown et deux fichier anglais et fr
-# todo .gitignore
-# todo librairie pour faire un csv à partir d'une liste ?
-
 
 def extract_soup(url):
     """ Parse a page, in other words make soup.
