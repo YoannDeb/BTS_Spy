@@ -7,6 +7,7 @@ __author__ = "Yoann Deblois"
 
 import pathlib
 import os
+from math import ceil
 
 import requests
 from bs4 import BeautifulSoup
@@ -14,11 +15,9 @@ from bs4 import BeautifulSoup
 # Todo mettre fonction __main__ et fonction principale (entry_point() ou BTS_Spy_job())
 # todo mettre en forme readme.md avec mise en forme Markdown et deux fichier anglais et fr
 # todo .gitignore
-# todo import math et use ceil
 # todo librairie pour faire un csv à partir d'une liste ?
 
 
-# e
 def extract_soup(url):
     """ Extract page from url, test connexion and make soup
     :param url: url of the page to parse
@@ -36,15 +35,6 @@ def extract_soup(url):
                 exit()
     page_soup = BeautifulSoup(page_content.content, "html.parser")
     return page_soup
-
-
-# Calculates a superior round
-def ceil(number):
-    if number % 1 == 0:
-        number = int(number)
-    else:
-        number = int(number) + 1
-    return number
 
 
 def extract_cat_urls(url):
