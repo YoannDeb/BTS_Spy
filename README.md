@@ -11,9 +11,10 @@ It's better to have Python > 3.2.2 for decent html.parser
 Open a terminal and navigate into the folder you want BTS-Spy to be downloaded, and run the following commands:
 
 ```
+git clone https://github.com/YoannDeb/BTS_Spy.git
+cd BTS_Spy
 Python -m venv env
 source env/bin/activate
-git clone https://github.com/YoannDeb/BTS_Spy.git
 pip install -r requirements.txt
 Python BTS_Spy.py
 ```
