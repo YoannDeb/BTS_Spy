@@ -9,20 +9,32 @@ Il est préférable d'avoir une version Python > 3.2.2 pour avoir un module html
 ## Création de l'environnement virtuel, téléchargement et execution du programme
 
 Ouvrir un terminal, se placer dans le dossier voulu et lancer les commandes suivantes :
+
+* Sur linux:
 ```
 git clone https://github.com/YoannDeb/BTS_Spy.git
 cd BTS_Spy
-Python -m venv env
+python3 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
-Python BTS_Spy.py
+python BTS_Spy.py
+```
+
+* Sur Windows:
+```
+git clone https://github.com/YoannDeb/BTS_Spy.git
+cd BTS_Spy
+python -m venv env
+env\Scripts\activate.bat
+pip install -r requirements.txt
+python BTS_Spy.py
 ```
 
 ## Que fait ce programme ?
 ### Récupération d'informations :
 
 Le programme va générer un fichier csv par catégorie, dans un dossier /data.
-Le nom de ce fichier sera "nom_de_la_categorie_dans_url".csv
+Le nom de ce fichier sera "nom_de_la_categorie_dans_url".csv.
 
 Le séparateur csv est ",".
 
