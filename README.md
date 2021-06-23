@@ -10,7 +10,7 @@ It's better to have Python > 3.2.2 for decent html.parser.
 
 Open a terminal and navigate into the folder you want BTS-Spy to be downloaded, and run the following commands:
 
-* On linux:
+* On Linux and Mac:
 ```
 git clone https://github.com/YoannDeb/BTS_Spy.git
 cd BTS_Spy
