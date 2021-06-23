@@ -10,7 +10,7 @@ Il est préférable d'avoir une version Python > 3.2.2 pour avoir un module html
 
 Ouvrir un terminal, se placer dans le dossier voulu et lancer les commandes suivantes :
 
-* Sur linux:
+* Sur Linux ou Mac:
 ```
 git clone https://github.com/YoannDeb/BTS_Spy.git
 cd BTS_Spy
