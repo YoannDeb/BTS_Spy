@@ -13,6 +13,7 @@ __author__ = "Yoann Deblois"
 
 import pathlib
 import os
+import time
 from math import ceil
 
 import requests
@@ -174,7 +175,7 @@ def init_csv(csv_name, link_cat_name):
     """
     with open(
             pathlib.Path.cwd() / 'data' / link_cat_name / csv_name, 'w', encoding='utf-8-sig'
-            ) as f:
+    ) as f:
         print("product_page_url,universal_product_code,title,"
               "price_including_tax,price_excluding_tax,number_available,"
               "product_description,category,review_rating,image_url,"
@@ -191,7 +192,7 @@ def append_csv(csv_name, link_cat_name, info_list):
     """
     with open(
             pathlib.Path.cwd() / 'data' / link_cat_name / csv_name, 'a', encoding='utf-8'
-            ) as f:
+    ) as f:
         print(f"{info_list[0]},{info_list[1]},{info_list[2]},{info_list[3]},"
               f"{info_list[4]},{info_list[5]},{info_list[6]},{info_list[7]},"
               f"{info_list[8]},{info_list[9]},{info_list[10]}", file=f)
@@ -216,6 +217,10 @@ def download_image(info_list, link_cat_name):
         "wb"
     ) as i:
         i.write(img.content)
+
+
+def elapsed_time_formatted(begin_time):
+    return time.strftime("%H:%M:%S", (time.gmtime(time.perf_counter() - begin_time)))
 
 
 def entry_point():
@@ -246,14 +251,19 @@ def entry_point():
     """
     cat_urls = extract_cat_urls("http://books.toscrape.com")
 
-    print("BTS_Spy connected successfully to http://books.toscrape.com !")
-    print("The scrapping may take some time...")
-    print("######################################")
+    print(
+        "\nBTS_Spy connected successfully to http://books.toscrape.com !"
+        "\nScrapping may take some time..."
+        "\n\n####################################"
+    )
 
+    begin_time = time.perf_counter()
     csv_counter = 0
     book_counter = 0
 
     for cat_url in cat_urls:
+        begin_cat_time = time.perf_counter()
+
         link_cat_name = cat_url.replace(
             "http://books.toscrape.com/catalogue/category/books/", "").replace(
             "/index.html", "")
@@ -261,9 +271,10 @@ def entry_point():
         links = book_links(list_of_pages_in_category(cat_url))
 
         print(
-            f"Processing with "
-            f"{extract_book_info(links[0], link_cat_name)[7]} category")
-        print("_________________________________________")
+            "Processing with "
+            f"{extract_book_info(links[0], link_cat_name)[7]} category"
+            "\n_________________________________________"
+        )
 
         csv_name = f'{link_cat_name}.csv'
         os.makedirs(pathlib.Path.cwd() / 'data' / link_cat_name / 'images', exist_ok=True)
@@ -276,7 +287,8 @@ def entry_point():
 
             print(
                 f"{book_counter} book(s) scraped | "
-                f"Processing with book : {book_info[2]}")
+                f"Processing with book : {book_info[2]}"
+            )
 
             book_counter += 1
 
@@ -288,19 +300,25 @@ def entry_point():
 
         print(
             "___________________________________________________"
-            "___________________________________________________")
-        print(
-            f"OK ! category n°{csv_counter} "
-            f"with {book_counter - previous_book_counter} book(s) "
-            f"inside completely scraped | {link_cat_name}.csv "
-            f"successfully generated")
-        print(
             "___________________________________________________"
-            "___________________________________________________")
+            "___________________________________________________"
+            f"\nOK ! Category n°{csv_counter} "
+            f"with {book_counter - previous_book_counter} book(s) "
+            f"inside entirely scraped | {link_cat_name}.csv "
+            "successfully generated | "
+            f"Processing time : {elapsed_time_formatted(begin_cat_time)} | "
+            f"Total time : {elapsed_time_formatted(begin_time)}"
+            "\n___________________________________________________"
+            "___________________________________________________"
+            "___________________________________________________"
+        )
 
     print(
-        f"Operation complete, {csv_counter} csv file(s) generated"
-        f" and {book_counter} books scraped. Goodbye !")
+        f"Operation complete | {csv_counter} csv file(s) generated | "
+        f"{book_counter} books scraped. | "
+        f"Total time : {elapsed_time_formatted(begin_time)} | "
+        "Goodbye !"
+    )
 
 
 if __name__ == '__main__':
