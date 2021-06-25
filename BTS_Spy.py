@@ -1,4 +1,5 @@
-""" BTS_Spy
+"""
+BTS_Spy
 
 Designed to scrape http://books.toscrape.com:
 - Create on csv file for each category
@@ -19,14 +20,14 @@ from bs4 import BeautifulSoup
 
 
 def extract_soup(url):
-    """ Parse a page, in other words make soup.
+    """
+    Parse a page, in other words make soup:
     - Extract page from url
     - Test connexion:
         * if failed propose a retry,
         * else make soup (parse page).
 
     :param url: Url of the page to parse.
-
     :return: Soup (page parsed).
     """
     while True:
@@ -45,10 +46,10 @@ def extract_soup(url):
 
 
 def extract_cat_urls(url):
-    """ Extract page's category list in homepage.
+    """
+    Extract page's category list in homepage.
 
     :param url: Homepage's url.
-
     :return: A list of index url of each category.
     """
     raw_cat_urls = extract_soup(url).select(".nav-list a")
@@ -60,11 +61,11 @@ def extract_cat_urls(url):
 
 
 def list_of_pages_in_category(cat_url_index):
-    """ Calculates the number of pages in a category
+    """
+    Calculates the number of pages in a category
     and generates the list of pages of this category.
 
     :param cat_url_index: The index page of the category.
-
     :return: A list of all pages of the category.
     """
     book_number = extract_soup(cat_url_index).select_one(
@@ -80,10 +81,10 @@ def list_of_pages_in_category(cat_url_index):
 
 
 def book_links(cat_urls_list):
-    """ Find all book's links in one category.
+    """
+    Find all book's links in one category.
 
     :param cat_urls_list: List of all pages in one category.
-
     :return: A list of all book links in one category.
     """
     raw_book_links = []
@@ -98,8 +99,8 @@ def book_links(cat_urls_list):
 
 
 def extract_book_info(product_page_url, link_cat_name):
-    """ This function extracts all wanted information in one book page.
-
+    """
+    This function extracts all wanted information in one book page.
     Those information are :
     - product_page_url
     - universal_product_code
@@ -118,13 +119,12 @@ def extract_book_info(product_page_url, link_cat_name):
 
     :param product_page_url: One book's url.
     :param link_cat_name: name of the category as it is in the url.
-
     :return: A list of all wanted information for this book
     """
     page_soup = extract_soup(product_page_url)
     title = '"' + page_soup.select_one('h1').text.replace('"', '') + '"'
 
-    # Extracting table which contains the following information
+    # Extracting table which contains several information
     table = page_soup.select('table.table-striped tr td')
 
     universal_product_code = table[0].text
@@ -156,8 +156,7 @@ def extract_book_info(product_page_url, link_cat_name):
 
     img_name = product_page_url.replace(
         "http://books.toscrape.com/catalogue", "").replace("/index.html", "")
-
-    saved_image_path = f"data/{link_cat_name}_img/{img_name}.jpg"
+    saved_image_path = f"data/{link_cat_name}/images/{img_name}.jpg"
 
     info_list = (product_page_url, universal_product_code,
                  title, price_including_tax, price_excluding_tax,
@@ -166,13 +165,15 @@ def extract_book_info(product_page_url, link_cat_name):
     return info_list
 
 
-def init_csv(csv_name):
-    """ Create the csv file in /data folder.
+def init_csv(csv_name, link_cat_name):
+    """
+    Create the csv file in /data folder.
 
     :param csv_name: Composed with the name of the book in the url.
+    :param link_cat_name: Name of the category as it is in the url.
     """
     with open(
-            pathlib.Path.cwd() / 'data' / csv_name, 'w', encoding='utf-8-sig'
+            pathlib.Path.cwd() / 'data' / link_cat_name / csv_name, 'w', encoding='utf-8-sig'
             ) as f:
         print("product_page_url,universal_product_code,title,"
               "price_including_tax,price_excluding_tax,number_available,"
@@ -180,22 +181,25 @@ def init_csv(csv_name):
               "saved_image_path", file=f)
 
 
-def append_csv(info_list, csv_name):
-    """ Print the information in the csv file.
+def append_csv(csv_name, link_cat_name, info_list):
+    """
+    Print the information in the csv file.
 
     :param csv_name:  Composed with the name of the book in the url.
+    :param link_cat_name: Name of the category as it is in the url.
     :param info_list: The book information list.
     """
     with open(
-            pathlib.Path.cwd() / 'data' / csv_name, 'a', encoding='utf-8'
+            pathlib.Path.cwd() / 'data' / link_cat_name / csv_name, 'a', encoding='utf-8'
             ) as f:
         print(f"{info_list[0]},{info_list[1]},{info_list[2]},{info_list[3]},"
               f"{info_list[4]},{info_list[5]},{info_list[6]},{info_list[7]},"
               f"{info_list[8]},{info_list[9]},{info_list[10]}", file=f)
 
 
-def download_picture(info_list, link_cat_name):
-    """ Downloads the picture of one book from it's information list.
+def download_image(info_list, link_cat_name):
+    """
+    Downloads the picture of one book from it's information list.
 
     The name of the .jpeg file is created with the book name in the url.
 
@@ -206,33 +210,17 @@ def download_picture(info_list, link_cat_name):
     :param link_cat_name: Name of the category as it is in the url.
     """
     img = requests.get(info_list[-2])
-    url_title = info_list[0].replace(
-        "http://books.toscrape.com/catalogue/", "").replace(
-        "/index.html", "")
-    img_name = f"{url_title}.jpg"
     with open(
-            pathlib.Path.cwd(
-            ) / 'data' / f'{link_cat_name}_img' / img_name, "wb"
-            ) as i:
+        pathlib.Path.cwd() / 'data' / link_cat_name / 'images' /
+        f'{info_list[0].replace("http://books.toscrape.com/catalogue/", "").replace("/index.html", "")}.jpg',
+        "wb"
+    ) as i:
         i.write(img.content)
-
-
-# todo: "Compact" version for function download_picture better?
-"""
-def download_picture_bis(info_list):
-    img = requests.get(info_list[-2])
-    with open(
-            pathlib.Path.cwd(
-            ) / 'data' / f'{link_cat_name}_img' / f'{info_list[0].replace(
-            "http://books.toscrape.com/catalogue/", "").replace(
-            "/index.html", "")}.jpg', "wb"
-            ) as i:
-        i.write(img.content)
-"""
 
 
 def entry_point():
-    """ This is the main job of BTS-Spy. Here is what it does:
+    """
+    This is the main job of BTS-Spy. Here is what it does:
 
     - Extracts all categories url
     - Prints a connexion confirmation and welcome message
@@ -262,8 +250,6 @@ def entry_point():
     print("The scrapping may take some time...")
     print("######################################")
 
-    os.makedirs(pathlib.Path.cwd() / 'data', exist_ok=True)
-
     csv_counter = 0
     book_counter = 0
 
@@ -280,10 +266,8 @@ def entry_point():
         print("_________________________________________")
 
         csv_name = f'{link_cat_name}.csv'
-        os.makedirs(
-            pathlib.Path.cwd(
-            ) / 'data' / f'{link_cat_name}_img', exist_ok=True)
-        init_csv(csv_name)
+        os.makedirs(pathlib.Path.cwd() / 'data' / link_cat_name / 'images', exist_ok=True)
+        init_csv(csv_name, link_cat_name)
 
         previous_book_counter = book_counter
 
@@ -296,9 +280,9 @@ def entry_point():
 
             book_counter += 1
 
-            append_csv(book_info, csv_name)
+            append_csv(csv_name, link_cat_name, book_info)
 
-            download_picture(book_info, link_cat_name)
+            download_image(book_info, link_cat_name)
 
         csv_counter += 1
 
