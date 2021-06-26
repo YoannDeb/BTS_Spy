@@ -14,6 +14,7 @@ __author__ = "Yoann Deblois"
 import pathlib
 import os
 import time
+import csv
 from math import ceil
 
 import requests
@@ -166,13 +167,7 @@ def extract_book_info(product_page_url, link_cat_name):
     return info_list
 
 
-def init_csv(csv_name, link_cat_name):
-    """
-    Create the csv file in /data folder.
-
-    :param csv_name: Composed with the name of the book in the url.
-    :param link_cat_name: Name of the category as it is in the url.
-    """
+def create_csv(csv_name, link_cat_name, info_list_of_lists):
     with open(
             pathlib.Path.cwd() / 'data' / link_cat_name / csv_name, 'w', encoding='utf-8-sig'
     ) as f:
@@ -180,22 +175,11 @@ def init_csv(csv_name, link_cat_name):
               "price_including_tax,price_excluding_tax,number_available,"
               "product_description,category,review_rating,image_url,"
               "saved_image_path", file=f)
-
-
-def append_csv(csv_name, link_cat_name, info_list):
-    """
-    Print the information in the csv file.
-
-    :param csv_name:  Composed with the name of the book in the url.
-    :param link_cat_name: Name of the category as it is in the url.
-    :param info_list: The book information list.
-    """
-    with open(
-            pathlib.Path.cwd() / 'data' / link_cat_name / csv_name, 'a', encoding='utf-8'
-    ) as f:
-        print(f"{info_list[0]},{info_list[1]},{info_list[2]},{info_list[3]},"
-              f"{info_list[4]},{info_list[5]},{info_list[6]},{info_list[7]},"
-              f"{info_list[8]},{info_list[9]},{info_list[10]}", file=f)
+        for info_list in info_list_of_lists:
+            print(f"{info_list[0]},{info_list[1]},{info_list[2]},{info_list[3]},"
+                  f"{info_list[4]},{info_list[5]},{info_list[6]},{info_list[7]},"
+                  f"{info_list[8]},{info_list[9]},{info_list[10]}", file=f)
+    return
 
 
 def download_image(info_list, link_cat_name):
@@ -220,6 +204,12 @@ def download_image(info_list, link_cat_name):
 
 
 def elapsed_time_formatted(begin_time):
+    """
+    Calculates difference between begin_time and actual time,
+    and formats it in HH:MM:SS.
+
+    :param begin_time: time we want to compare with, in seconds.
+    """
     return time.strftime("%H:%M:%S", (time.gmtime(time.perf_counter() - begin_time)))
 
 
@@ -228,11 +218,12 @@ def entry_point():
     This is the main job of BTS-Spy. Here is what it does:
 
     - Extracts all categories url
-    - Prints a connexion confirmation and welcome message
-    - Creates a directory data if exists
+    - initiate reference time
     - Initiate counters for the number of csv created (one per category)
       and books scraped
+    - Prints a connexion confirmation and welcome message
     - Main loop: For each category:
+        * initiate reference time for the current category
         * Find all book links in a category
         * Create a csv by the name of the category in the url
           and add headers
@@ -251,22 +242,23 @@ def entry_point():
     """
     cat_urls = extract_cat_urls("http://books.toscrape.com")
 
+    begin_time = time.perf_counter()
+    csv_counter = 0
+    book_counter = 0
+
     print(
         "\nBTS_Spy connected successfully to http://books.toscrape.com !"
         "\nScrapping may take some time..."
         "\n\n####################################"
     )
 
-    begin_time = time.perf_counter()
-    csv_counter = 0
-    book_counter = 0
-
     for cat_url in cat_urls:
         begin_cat_time = time.perf_counter()
-
+        previous_book_counter = book_counter
         link_cat_name = cat_url.replace(
             "http://books.toscrape.com/catalogue/category/books/", "").replace(
             "/index.html", "")
+        csv_name = f'{link_cat_name}.csv'
 
         links = book_links(list_of_pages_in_category(cat_url))
 
@@ -276,14 +268,13 @@ def entry_point():
             "\n_________________________________________"
         )
 
-        csv_name = f'{link_cat_name}.csv'
         os.makedirs(pathlib.Path.cwd() / 'data' / link_cat_name / 'images', exist_ok=True)
-        init_csv(csv_name, link_cat_name)
 
-        previous_book_counter = book_counter
-
+        all_books_in_cat_info = []
         for link in links:
             book_info = extract_book_info(link, link_cat_name)
+            all_books_in_cat_info.append(book_info)
+            download_image(book_info, link_cat_name)
 
             print(
                 f"{book_counter} book(s) scraped | "
@@ -292,9 +283,7 @@ def entry_point():
 
             book_counter += 1
 
-            append_csv(csv_name, link_cat_name, book_info)
-
-            download_image(book_info, link_cat_name)
+        create_csv(csv_name, link_cat_name, all_books_in_cat_info)
 
         csv_counter += 1
 
