@@ -160,26 +160,34 @@ def extract_book_info(product_page_url, link_cat_name):
         "http://books.toscrape.com/catalogue", "").replace("/index.html", "")
     saved_image_path = f"data/{link_cat_name}/images/{img_name}.jpg"
 
-    info_list = (product_page_url, universal_product_code,
+    info_list = [product_page_url, universal_product_code,
                  title, price_including_tax, price_excluding_tax,
                  number_available, product_description, category,
-                 review_rating, image_url, saved_image_path)
+                 review_rating, image_url, saved_image_path]
     return info_list
 
 
 def create_csv(csv_name, link_cat_name, info_list_of_lists):
+    """
+    Print the information in the csv file.
+
+    :param csv_name:  Composed with the name of the book in the url.
+    :param link_cat_name: Name of the category as it is in the url.
+    :param info_list_of_lists: The list of lists of book information
+    in on category.
+    """
     with open(
-            pathlib.Path.cwd() / 'data' / link_cat_name / csv_name, 'w', encoding='utf-8-sig'
+            pathlib.Path.cwd() / 'data' / link_cat_name /
+            csv_name, 'w', newline='', encoding='utf-8-sig'
     ) as f:
-        print("product_page_url,universal_product_code,title,"
-              "price_including_tax,price_excluding_tax,number_available,"
-              "product_description,category,review_rating,image_url,"
-              "saved_image_path", file=f)
+        csv.writer(f).writerow(["product_page_url,universal_product_code",
+                                "title", "price_including_tax",
+                                "price_excluding_tax", "number_available",
+                                "product_description", "category",
+                                "review_rating", "image_url",
+                                "saved_image_path"])
         for info_list in info_list_of_lists:
-            print(f"{info_list[0]},{info_list[1]},{info_list[2]},{info_list[3]},"
-                  f"{info_list[4]},{info_list[5]},{info_list[6]},{info_list[7]},"
-                  f"{info_list[8]},{info_list[9]},{info_list[10]}", file=f)
-    return
+            csv.writer(f).writerow(info_list)
 
 
 def download_image(info_list, link_cat_name):
