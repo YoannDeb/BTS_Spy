@@ -157,7 +157,7 @@ def extract_book_info(product_page_url, link_cat_name):
         "#product_gallery .item").img['src'][5:]
 
     img_name = product_page_url.replace(
-        "http://books.toscrape.com/catalogue", "").replace("/index.html", "")
+        "http://books.toscrape.com/catalogue/", "").replace("/index.html", "")
     saved_image_path = f"data/{link_cat_name}/images/{img_name}.jpg"
 
     info_list = [product_page_url, universal_product_code,
@@ -180,7 +180,7 @@ def create_csv(csv_name, link_cat_name, info_list_of_lists):
             pathlib.Path.cwd() / 'data' / link_cat_name /
             csv_name, 'w', newline='', encoding='utf-8-sig'
     ) as f:
-        csv.writer(f).writerow(["product_page_url,universal_product_code",
+        csv.writer(f).writerow(["product_page_url", "universal_product_code",
                                 "title", "price_including_tax",
                                 "price_excluding_tax", "number_available",
                                 "product_description", "category",
