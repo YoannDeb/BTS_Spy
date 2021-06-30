@@ -47,9 +47,9 @@ def extract_soup(url):
     return page_soup
 
 
-def extract_cat_urls(url):
+def list_cat_urls(url):
     """
-    Extract page's category list in homepage.
+    List category pages url in homepage.
 
     :param url: Homepage's url.
     :return: A list of index url of each category.
@@ -62,7 +62,7 @@ def extract_cat_urls(url):
     return clean_cat_urls
 
 
-def list_of_pages_in_category(cat_url_index):
+def list_pages_in_category(cat_url_index):
     """
     Calculates the number of pages in a category
     and generates the list of pages of this category.
@@ -82,7 +82,7 @@ def list_of_pages_in_category(cat_url_index):
     return all_url_of_one_category
 
 
-def book_links(cat_urls_list):
+def list_book_links(cat_urls_list):
     """
     Find all book's links in one category.
 
@@ -100,9 +100,9 @@ def book_links(cat_urls_list):
     return clean_book_links
 
 
-def extract_book_info(product_page_url, link_cat_name):
+def list_book_info(product_page_url, link_cat_name):
     """
-    This function extracts all wanted information in one book page.
+    List all wanted information on a book page.
     Those information are :
     - product_page_url
     - universal_product_code
@@ -218,7 +218,9 @@ def elapsed_time_formatted(begin_time):
 
     :param begin_time: time we want to compare with, in seconds.
     """
-    return time.strftime("%H:%M:%S", (time.gmtime(time.perf_counter() - begin_time)))
+    return time.strftime(
+        "%H:%M:%S", (time.gmtime(time.perf_counter() - begin_time))
+    )
 
 
 def entry_point():
@@ -248,7 +250,7 @@ def entry_point():
     - Show final success message with total amount of csv files
       and books scraped
     """
-    cat_urls = extract_cat_urls("http://books.toscrape.com")
+    cat_urls = list_cat_urls("http://books.toscrape.com")
 
     begin_time = time.perf_counter()
     csv_counter = 0
@@ -268,19 +270,21 @@ def entry_point():
             "/index.html", "")
         csv_name = f'{link_cat_name}.csv'
 
-        links = book_links(list_of_pages_in_category(cat_url))
+        links = list_book_links(list_pages_in_category(cat_url))
 
         print(
             "Processing with "
-            f"{extract_book_info(links[0], link_cat_name)[7]} category"
+            f"{list_book_info(links[0], link_cat_name)[7]} category"
             "\n_________________________________________"
         )
 
-        os.makedirs(pathlib.Path.cwd() / 'data' / link_cat_name / 'images', exist_ok=True)
+        os.makedirs(
+            pathlib.Path.cwd() / 'data' / link_cat_name / 'images', exist_ok=True
+        )
 
         all_books_in_cat_info = []
         for link in links:
-            book_info = extract_book_info(link, link_cat_name)
+            book_info = list_book_info(link, link_cat_name)
             all_books_in_cat_info.append(book_info)
             download_image(book_info, link_cat_name)
 
