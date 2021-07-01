@@ -53,6 +53,4 @@ This file will contain those entries :
 
 ### Book image downloading:
  
-Also creates an image folder for each category, whose name will be "category_url_name"_img, in a folder data/"category_url_name"/images
-
-In this folder will be downloaded all images of all the books of one category.
+Also downloaded all images of all the books in each category, in a folder data/"category_url_name"/images.
