@@ -33,7 +33,7 @@ python BTS_Spy.py
 ## What is this program doing?
 ### Information retrieving:
 
-It will generate one csv file by category, whose name is "category_url_name".csv, in a folder /data.
+It will generate one csv file by category, whose name is "category_url_name".csv, in a folder /data/"category_url_name".
 
 The separator in the csv file is ",".
 
@@ -53,6 +53,6 @@ This file will contain those entries :
 
 ### Book image downloading:
  
-Also creates an image folder for each category, whose name will be "category_url_name"_img.
+Also creates an image folder for each category, whose name will be "category_url_name"_img, in a folder data/"category_url_name"/images
 
 In this folder will be downloaded all images of all the books of one category.
