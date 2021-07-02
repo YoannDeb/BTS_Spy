@@ -2,9 +2,9 @@
 BTS_Spy
 
 Designed to scrape http://books.toscrape.com:
-- Create on csv file for each category
+- Create one csv file for each category in data/"name_of_category" folder
 - Each csv contains information on each book of the category
-- Download the picture of the book in a folder named after the category
+- Download the picture of the book in data/"name_of_category"/image folder
 
 (It's better to run on Python > 3.2.2 for decent html.parser)
 """
@@ -90,8 +90,8 @@ def list_book_links(cat_urls_list):
     :return: A list of all book links in one category.
     """
     raw_book_links = []
-    for page in range(0, len(cat_urls_list)):
-        page_soup = extract_soup(cat_urls_list[page])
+    for page in cat_urls_list:
+        page_soup = extract_soup(page)
         raw_book_links = raw_book_links + page_soup.select('h3 > a')
     clean_book_links = []
     for raw_book_link in raw_book_links:
@@ -169,7 +169,9 @@ def list_book_info(product_page_url, link_cat_name):
 
 def create_csv(csv_name, link_cat_name, info_list_of_lists):
     """
-    Print the information in the csv file.
+    Print the information in the csv file:
+    - Write headers
+    - For each book write information in one row
 
     :param csv_name:  Composed with the name of the book in the url.
     :param link_cat_name: Name of the category as it is in the url.
@@ -180,23 +182,21 @@ def create_csv(csv_name, link_cat_name, info_list_of_lists):
             pathlib.Path.cwd() / 'data' / link_cat_name /
             csv_name, 'w', newline='', encoding='utf-8-sig'
     ) as f:
-        csv.writer(f).writerow(["product_page_url", "universal_product_code",
-                                "title", "price_including_tax",
-                                "price_excluding_tax", "number_available",
-                                "product_description", "category",
-                                "review_rating", "image_url",
-                                "saved_image_path"])
+        csv.writer(f).writerow([
+            "product_page_url", "universal_product_code", "title",
+            "price_including_tax", "price_excluding_tax",
+            "number_available", "product_description", "category",
+            "review_rating", "image_url", "saved_image_path"
+        ])
         for info_list in info_list_of_lists:
             csv.writer(f).writerow(info_list)
 
 
 def download_image(info_list, link_cat_name):
     """
-    Downloads the picture of one book from it's information list.
-
-    The name of the .jpeg file is created with the book name in the url.
-
-    The file is saved in a folder in /data named after
+    - Downloads the picture of one book from it's information list.
+    - The name of the .jpeg file is created with the book name in the url.
+    - The file is saved in a folder in /data named after
       the category's name in the url.
 
     :param info_list: The book information list.
@@ -227,29 +227,34 @@ def entry_point():
     """
     This is the main job of BTS-Spy. Here is what it does:
 
-    - Extracts all categories url
+    - Extract all categories url
     - initiate reference time
     - Initiate counters for the number of csv created (one per category)
       and books scraped
     - Prints a connexion confirmation and welcome message
     - Main loop: For each category:
-        * initiate reference time for the current category
+        * Initiate reference time for the current category
+        * keep current book counter
+        * Define link_cat_name and csv name based upon it
         * Find all book links in a category
-        * Create a csv by the name of the category in the url
-          and add headers
         * Show the category that is going to be scraped in console
+        * Create folders to store category's files
+        * Initiate list of lists of all books' information in the category
         * Launch the Child loop
           * Child loop: For each book in the category:
             ** Extract all information
+            ** Append the list of all books' information
             ** Show progress in console
             ** Increase the book counter by one
-            ** Append the csv file of the category
             ** Download the picture
+            ** Increase book_counter by one
+        * Create the csv file with all books' information
         * Increase csv counter by one
         * Show success message with the amount books scraped in category
     - Show final success message with total amount of csv files
       and books scraped
     """
+    # Extract all categories url
     cat_urls = list_cat_urls("http://books.toscrape.com")
 
     begin_time = time.perf_counter()
@@ -261,7 +266,7 @@ def entry_point():
         "\nScrapping may take some time..."
         "\n\n####################################"
     )
-
+    # Main loop
     for cat_url in cat_urls:
         begin_cat_time = time.perf_counter()
         previous_book_counter = book_counter
@@ -270,6 +275,7 @@ def entry_point():
             "/index.html", "")
         csv_name = f'{link_cat_name}.csv'
 
+        # Find all book links in a category
         links = list_book_links(list_pages_in_category(cat_url))
 
         print(
@@ -278,14 +284,19 @@ def entry_point():
             "\n_________________________________________"
         )
 
+        # Create folders to store category's files
         os.makedirs(
             pathlib.Path.cwd() / 'data' / link_cat_name / 'images', exist_ok=True
         )
 
         all_books_in_cat_info = []
+        # Child loop
         for link in links:
+            # Extract all information of one book
             book_info = list_book_info(link, link_cat_name)
+
             all_books_in_cat_info.append(book_info)
+
             download_image(book_info, link_cat_name)
 
             print(
