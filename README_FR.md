@@ -33,7 +33,7 @@ python BTS_Spy.py
 ## Que fait ce programme ?
 ### Récupération d'informations :
 
-Le programme va générer un fichier csv par catégorie, dans un dossier /data.
+Le programme va générer un fichier csv par catégorie, dans un dossier data/"category_url_name".
 Le nom de ce fichier sera "nom_de_la_categorie_dans_url".csv.
 
 Le séparateur csv est ",".
@@ -54,8 +54,4 @@ Le fichier contiendra ces entrées :
 
 ### Téléchargement des images des livres:
 
-Le programme va également, dans le dossier data, créer un dossier pour chaque catégorie.
-
-Le nom de ce dossier sera "nom_de_la_catégorie_dans_url"_img.
-
-Dans ce dossier seront téléchargées toutes les images de tous les livres de chaque catégorie.
+Le programme va également télécharger toutes les images de tous les livres de chaque catégorie dans un dossier data/"category_url_name"/images.
