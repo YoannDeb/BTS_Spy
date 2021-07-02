@@ -56,7 +56,7 @@ def list_cat_urls(url):
     """
     raw_cat_urls = extract_soup(url).select(".nav-list a")
     del raw_cat_urls[0]  # delete "books" false category
-    clean_cat_urls = []
+    clean_cat_urls: [str] = []
     for entry in raw_cat_urls:
         clean_cat_urls.append(f"{url}/{entry['href']}")
     return clean_cat_urls
@@ -158,7 +158,7 @@ def list_book_info(product_page_url, link_cat_name):
 
     img_name = product_page_url.replace(
         "http://books.toscrape.com/catalogue/", "").replace("/index.html", "")
-    saved_image_path = f"data/{link_cat_name}/images/{img_name}.jpg"
+    saved_image_path = f"data/{link_cat_name}/images/{img_name[:50]}.jpg"
 
     info_list = [product_page_url, universal_product_code,
                  title, price_including_tax, price_excluding_tax,
@@ -205,7 +205,7 @@ def download_image(info_list, link_cat_name):
     img = requests.get(info_list[-2])
     with open(
         pathlib.Path.cwd() / 'data' / link_cat_name / 'images' /
-        f'{info_list[0].replace("http://books.toscrape.com/catalogue/", "").replace("/index.html", "")}.jpg',
+        f'{info_list[-1].replace(f"data/{link_cat_name}/images/", "")}',
         "wb"
     ) as i:
         i.write(img.content)
