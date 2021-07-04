@@ -8,9 +8,10 @@ It's better to have Python > 3.2.2 for decent html.parser.
 
 ## Creating Virtual environment, downloading and running the program
 
+You need Python (minimum 3.2.2, tested on 3.9.5) and git installed on your machine. 
 Open a terminal and navigate into the folder you want BTS-Spy to be downloaded, and run the following commands:
 
-* On Linux and Mac:
+* On Linux or MacOS:
 ```
 git clone https://github.com/YoannDeb/BTS_Spy.git
 cd BTS_Spy

@@ -8,9 +8,10 @@ Il est préférable d'avoir une version Python > 3.2.2 pour avoir un module html
 
 ## Création de l'environnement virtuel, téléchargement et execution du programme
 
+Python (minimum 3.2.2, testé sur 3.9.5) et git doivent être installés.
 Ouvrir un terminal, se placer dans le dossier voulu et lancer les commandes suivantes :
 
-* Sur Linux ou Mac:
+* Sur Linux ou MacOS:
 ```
 git clone https://github.com/YoannDeb/BTS_Spy.git
 cd BTS_Spy
