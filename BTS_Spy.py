@@ -47,7 +47,7 @@ def extract_soup(url):
     return page_soup
 
 
-def list_cat_urls(url):
+def list_cat_index_urls(url):
     """
     List category pages url in homepage.
 
@@ -55,30 +55,33 @@ def list_cat_urls(url):
     :return: A list of index url of each category.
     """
     raw_cat_urls = extract_soup(url).select(".nav-list a")
-    del raw_cat_urls[0]  # delete "books" false category
-    clean_cat_urls: [str] = []
-    for entry in raw_cat_urls:
-        clean_cat_urls.append(f"{url}/{entry['href']}")
+
+    # Delete "books" false category
+    del raw_cat_urls[0]
+    clean_cat_urls = [f"{url}/{entry['href']}" for entry in raw_cat_urls]
     return clean_cat_urls
 
 
-def list_pages_in_category(cat_url_index):
+def list_pages_in_category(cat_index_url):
     """
     Calculates the number of pages in a category
     and generates the list of pages of this category.
 
-    :param cat_url_index: The index page of the category.
+    :param cat_index_url: The index page of the category.
     :return: A list of all pages of the category.
     """
-    book_number = extract_soup(cat_url_index).select_one(
+    cat_total_book_number = extract_soup(cat_index_url).select_one(
         '.form-horizontal > strong').text
-    nb_pages = ceil(int(book_number) / 20)
+    nb_pages = ceil(int(cat_total_book_number) / 20)
 
-    all_url_of_one_category = [cat_url_index]
+    # Add index.html first category page to the list
+    all_url_of_one_category = [cat_index_url]
 
+    # Append other pages if needed (page-x.html)
     for nb_page in range(2, nb_pages + 1):
-        all_url_of_one_category.append(cat_url_index.replace(
-            "index", f"page-{str(nb_page)}"))
+        all_url_of_one_category.append(
+            cat_index_url.replace("index", f"page-{str(nb_page)}")
+        )
     return all_url_of_one_category
 
 
@@ -93,10 +96,10 @@ def list_book_links(cat_urls_list):
     for page in cat_urls_list:
         page_soup = extract_soup(page)
         raw_book_links = raw_book_links + page_soup.select('h3 > a')
-    clean_book_links = []
-    for raw_book_link in raw_book_links:
-        clean_book_links.append(
-            f"http://books.toscrape.com/catalogue{raw_book_link['href'][8:]}")
+    clean_book_links = [
+        f"http://books.toscrape.com/catalogue{raw_book_link['href'][8:]}"
+        for raw_book_link in raw_book_links
+    ]
     return clean_book_links
 
 
@@ -114,8 +117,9 @@ def list_book_info(product_page_url, link_cat_name):
     - category
     - review_rating (Converted in numbers instead of words)
     - image_url
-    - saved_image_path (/data/category_folder_img whose name
-    is created from the name of the category in the url)
+    - saved_image_path (in folder /data/category_folder_img whose name
+    is created from the name of the category in the url,
+    and image name created with the book url name shortened to 50 characters)
 
     Some variables are surrounded by quotes to comply with csv format.
 
@@ -124,7 +128,7 @@ def list_book_info(product_page_url, link_cat_name):
     :return: A list of all wanted information for this book
     """
     page_soup = extract_soup(product_page_url)
-    title = '"' + page_soup.select_one('h1').text.replace('"', '') + '"'
+    title = f'"' + page_soup.select_one('h1').text.replace('"', '') + '"'
 
     # Extracting table which contains several information
     table = page_soup.select('table.table-striped tr td')
@@ -254,8 +258,8 @@ def entry_point():
     - Show final success message with total amount of csv files
       and books scraped
     """
-    # Extract all categories url
-    cat_urls = list_cat_urls("http://books.toscrape.com")
+    # Extract all categories index url
+    cat_index_urls = list_cat_index_urls("http://books.toscrape.com")
 
     begin_time = time.perf_counter()
     csv_counter = 0
@@ -266,17 +270,19 @@ def entry_point():
         "\nScrapping may take some time..."
         "\n\n####################################"
     )
+
     # Main loop
-    for cat_url in cat_urls:
+    for cat_index_url in cat_index_urls:
         begin_cat_time = time.perf_counter()
         previous_book_counter = book_counter
-        link_cat_name = cat_url.replace(
+
+        link_cat_name = cat_index_url.replace(
             "http://books.toscrape.com/catalogue/category/books/", "").replace(
             "/index.html", "")
         csv_name = f'{link_cat_name}.csv'
 
         # Find all book links in a category
-        links = list_book_links(list_pages_in_category(cat_url))
+        links = list_book_links(list_pages_in_category(cat_index_url))
 
         print(
             "Processing with "
